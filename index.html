@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Playing Card Collection</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+      margin: 0;
+      min-height: 100vh;
+    }
+    h1 {
+      color: #2d1152;
+      text-align: center;
+      margin-top: 40px;
+      text-shadow: 1px 2px 10px #ccc;
+      font-size: 2.3rem;
+    }
+    #add-area {
+      background: #fff6e0;
+      max-width: 420px;
+      margin: 32px auto 14px auto;
+      padding: 24px 24px 16px 24px;
+      border-radius: 20px;
+      box-shadow: 0 2px 14px #c3b2fa85;
+    }
+    #add-area input {
+      background: #f8edff;
+      border: 1px solid #d0b9ff;
+      border-radius: 8px;
+      padding: 9px 12px;
+      margin: 7px;
+    }
+    #add-area button {
+      background: linear-gradient(90deg, #7fdbfc 0%, #ff91a6 100%);
+      border: none;
+      color: #121212;
+      font-weight: bold;
+      font-size: 1rem;
+      padding: 8px 18px;
+      border-radius: 10px;
+      transition: 0.2s;
+      cursor: pointer;
+      margin-left: 7px;
+    }
+    #add-area button:hover {
+      filter: brightness(1.15);
+      box-shadow: 0px 2px 8px #a0c1ff80;
+    }
+    #refresh-btn {
+      display: block;
+      background: linear-gradient(90deg, #e9bcfa 0%, #fb9a8c 100%);
+      color: #fff;
+      border: none;
+      border-radius: 13px;
+      font-weight: bold;
+      padding: 13px;
+      margin: 16px auto 14px auto;
+      transition: 0.2s;
+      cursor: pointer;
+      font-size: 1.05rem;
+      box-shadow: 0px 2px 8px #a0c1ff80;
+      width: 220px;
+    }
+    #refresh-btn:hover {
+      filter: brightness(0.92);
+      box-shadow: 0px 6px 20px #b993fa85;
+    }
+    #cards {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .card {
+      background: linear-gradient(90deg, #ee9ca7 0%, #ffdde1 100%);
+      border: 2px solid #8ec5fc;
+      box-shadow: 1px 1px 14px #cccafa;
+      padding: 17px 18px;
+      border-radius: 16px;
+      margin-bottom: 17px;
+      font-size: 1.11rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: popin 0.7s;
+    }
+    @keyframes popin {
+      0% { transform: scale(0.95); opacity: 0; }
+      80% { transform: scale(1.03); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .controls button {
+      background: linear-gradient(135deg, #7fdbfc 15%, #fb9a8c 85%);
+      border: none;
+      color: white;
+      font-weight: bold;
+      padding: 5px 14px;
+      border-radius: 6px;
+      margin-left: 7px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.18s;
+    }
+    .controls button:hover {
+      background: linear-gradient(135deg, #1e8ed4 20%, #d92535 99%);
+      filter: brightness(1.1);
+    }
+    .delete-btn {
+      background: linear-gradient(135deg, #ff6f61 40%, #e95e5e 100%);
+    }
+    .delete-btn:hover {
+      background: linear-gradient(135deg, #e95e5e 36%, #e81313 99%);
+    }
+    #infoBox {
+      max-width: 420px;
+      margin: 24px auto;
+      background: #bbfff5;
+      border: 2px solid #0eefff;
+      color: #202;
+      padding: 11px 18px;
+      border-radius: 12px;
+      font-weight: bold;
+      box-shadow: 0px 2px 8px #a0c1ff80;
+      text-align: center;
+      font-size: 1.04rem;
+      letter-spacing: 0.2px;
+    }
+    @media (max-width: 600px) {
+      #add-area, #infoBox, #cards { max-width: 99vw; margin: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Playing Card Collection - Express REST API Demo</h1>
+  <div id="add-area">
+    <input type="text" id="suit" placeholder="Suit (e.g., Hearts)" />
+    <input type="text" id="value" placeholder="Value (e.g., Ace)" />
+    <button onclick="addCard()">Add Card</button>
+  </div>
+  <button id="refresh-btn" onclick="listCards()">Refresh Cards</button>
+  <div id="cards"></div>
+
+  <script>
+    function listCards() {
+      fetch('/api/cards')
+        .then(res => res.json())
+        .then(data => {
+          const cardsDiv = document.getElementById('cards');
+          if (data.length === 0) {
+            cardsDiv.innerHTML = '<i>No cards found.</i>';
+            return;
+          }
+          cardsDiv.innerHTML = data.map(card =>
+            `<div class="card">
+              <span><b style="color:#2d1152; text-shadow:1px 1px #fff">${card.value}</b> of <span style="color:#3e7ebc; font-weight:bold; text-shadow: 0 1px 5px #fff">${card.suit}</span></span>
+              <span class="controls">
+                <button onclick="getCard(${card.id})">Show</button>
+                <button class="delete-btn" onclick="deleteCard(${card.id})">Delete</button>
+              </span>
+            </div>`
+          ).join('');
+        });
+    }
+
+    function addCard() {
+      const suit = document.getElementById('suit').value;
+      const value = document.getElementById('value').value;
+      fetch('/api/cards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ suit, value })
+      })
+        .then(res => res.json())
+        .then(data => {
+          showInfo(`Added: <b style="color:#2d1152">${data.value}</b> of <span style="color:#3e7ebc;">${data.suit}</span>`);
+          document.getElementById('suit').value = '';
+          document.getElementById('value').value = '';
+          listCards();
+        });
+    }
+
+    function getCard(id) {
+      fetch(`/api/cards/${id}`)
+        .then(res => res.json())
+        .then(card => {
+          showInfo(`<b>${card.value}</b> of <span style="color:#3e7ebc;">${card.suit}</span>`);
+        });
+    }
+
+    function deleteCard(id) {
+      fetch(`/api/cards/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(msg => {
+          showInfo(msg.message, true);
+          listCards();
+        });
+    }
+
+    function showInfo(message, isDelete=false) {
+      let infoBox = document.getElementById('infoBox');
+      if (!infoBox) {
+        infoBox = document.createElement('div');
+        infoBox.id = 'infoBox';
+        infoBox.style.background = isDelete ? '#ffe5e5' : '#e5ffe7';
+        infoBox.style.border = isDelete ? '2px solid #e95e5e' : '2px solid #68d0e4';
+        infoBox.style.color = '#222';
+        infoBox.style.padding = '11px 18px';
+        infoBox.style.margin = '24px auto';
+        infoBox.style.borderRadius = '12px';
+        infoBox.style.fontWeight = 'bold';
+        infoBox.style.boxShadow = '0px 2px 8px #a0c1ff80';
+        infoBox.style.textAlign = 'center';
+        infoBox.style.maxWidth = '420px';
+        document.body.insertBefore(infoBox, document.getElementById('cards'));
+      }
+      infoBox.innerHTML = message;
+      setTimeout(() => { infoBox.innerHTML = ''; }, 2700);
+    }
+    listCards();
+  </script>
+</body>
+</html>
